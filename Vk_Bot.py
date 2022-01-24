@@ -48,7 +48,7 @@ class VkBot:
         response = vk_p.method('users.search',
                                {'city': self.user_data['user_city'], 'has_photo': 1,
                                 'age_from': self.user_data['age'] - 3, 'age_to': self.user_data['age'] + 3, 'status': 6,
-                                'sex': 1 if self.user_data['user_sex'] == 2 else 2, 'count': 10})
+                                'sex': 1 if self.user_data['user_sex'] == 2 else 2, 'count': 5})
         users_profile = response['items']
         if not users_profile:
             self.get_more_information('error')
@@ -59,10 +59,9 @@ class VkBot:
             for item in temp_list:
                 id_list.append(item['id'])
             random_id = random.choice(id_list)
-            print(random_id)
             if Vk_Db.add_partner_to_db(random_id, self.user_id) is True:
-                random_id = random.choice(id_list.pop(random_id))
-                print(random_id)
+                random_i = random.choice(id_list.remove(random_id))
+                return random_i
             return random_id
 
     def get_photo_list(self):

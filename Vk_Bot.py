@@ -4,6 +4,7 @@ from datetime import datetime
 import vk_api
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.longpoll import VkLongPoll, VkEventType
+import Vk_Db
 
 with open('config.json') as f:
     config = json.load(f)
@@ -47,7 +48,7 @@ class VkBot:
         response = vk_p.method('users.search',
                                {'city': self.user_data['user_city'], 'has_photo': 1,
                                 'age_from': self.user_data['age'] - 3, 'age_to': self.user_data['age'] + 3, 'status': 6,
-                                'sex': 1 if self.user_data['user_sex'] == 2 else 2, 'count': 1000})
+                                'sex': 1 if self.user_data['user_sex'] == 2 else 2, 'count': 10})
         users_profile = response['items']
         if not users_profile:
             self.get_more_information('error')
@@ -57,7 +58,11 @@ class VkBot:
                     temp_list.append(list_users)
             for item in temp_list:
                 id_list.append(item['id'])
-            random_id = random.choice(id_list)  # сюда постааить ссылку на метод из БД который будет проверять наличие пользователя в БД
+            random_id = random.choice(id_list)
+            print(random_id)
+            if Vk_Db.add_partner_to_db(random_id, self.user_id) is True:
+                random_id = random.choice(id_list.pop(random_id))
+                print(random_id)
             return random_id
 
     def get_photo_list(self):
@@ -148,6 +153,7 @@ if __name__ == '__main__':
     print('Server started')
     for event in longpoll.listen():
         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
+            Vk_Db.Base.metadata.create_all(Vk_Db.engine)
             bot = VkBot(event.user_id)
             bot.write_msg(event.user_id, bot.new_message(event.text))
             print('Text: ', event.text)

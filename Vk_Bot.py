@@ -48,7 +48,7 @@ class VkBot:
         response = vk_p.method('users.search',
                                {'city': self.user_data['user_city'], 'has_photo': 1,
                                 'age_from': self.user_data['age'] - 3, 'age_to': self.user_data['age'] + 3, 'status': 6,
-                                'sex': 1 if self.user_data['user_sex'] == 2 else 2, 'count': 5})
+                                'sex': 1 if self.user_data['user_sex'] == 2 else 2, 'count': 1000})
         users_profile = response['items']
         if not users_profile:
             self.get_more_information('error')
@@ -59,9 +59,9 @@ class VkBot:
             for item in temp_list:
                 id_list.append(item['id'])
             random_id = random.choice(id_list)
-            if Vk_Db.add_partner_to_db(random_id, self.user_id) is True:
-                random_i = random.choice(id_list.remove(random_id))
-                return random_i
+            while Vk_Db.add_partner_to_db(random_id, self.user_id) is True:
+                random_id = random.choice(id_list.remove(random_id))
+                return random_id
             return random_id
 
     def get_photo_list(self):
@@ -72,8 +72,7 @@ class VkBot:
         for item in photo_response:
             likes_comments_count = (item['likes']['count'] + item['comments']['count'])
             photo_id = item['id']
-            temp_dict = {str(photo_id): str(likes_comments_count)}
-            unsorted_photo_dict.update(temp_dict)
+            unsorted_photo_dict[str(photo_id)] = str(likes_comments_count)
         temp_list = sorted(unsorted_photo_dict.items(), reverse=True, key=lambda x: int(x[1]))
         sorted_list = [item[0] for item in temp_list[:3]]
         return owner_id, sorted_list
